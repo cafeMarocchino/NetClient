@@ -1,6 +1,6 @@
 /*
-Student ID : 
-Name : 
+Student ID : 20133230
+Name : 성정훈
 */
 #include <unistd.h>
 #include <sys/types.h>
@@ -83,7 +83,6 @@ int main(int argc, char **argv) {
   fd_max = tcpServ_sock;
 
   while(1) {
-      prints("asgagagagagsaga");
     int nfound = 0;
     temps = reads;
     nfound = select(fd_max+1, &temps, 0, 0, NULL);
@@ -98,7 +97,8 @@ int main(int argc, char **argv) {
       int i;
       printf("connection from host %s, port %d, socket %d\n",
         inet_ntoa(tcpClient_addr.sin_addr), ntohs(tcpClient_addr.sin_port), clienttcpSocket[num_socket - 1]);
-      FD_SET(new_sock, &reads);
+      FD_SET(clienttcpSocket[num_socket - 1], &reads);
+      fd_max++;
       FD_CLR(tcpServ_sock, &temps);
 	  } else {
       for(int i = 0; i < MAXCLIENT; i++) {
@@ -106,22 +106,23 @@ int main(int argc, char **argv) {
           int bytesread = read(clienttcpSocket[i], str, sizeof str - 1);
           if (bytesread < 0) {
             perror("read");
+          } else if(bytesread  <= 0) {
+            printf("Connetion Closed  %d\n",clienttcpSocket[i]);
+            FD_CLR(clienttcpSocket[i], &reads);
+            close(clienttcpSocket[i]);
+            for(int m = i + 1; m < MAXCLIENT; m++)
+              clienttcpSocket[m - 1] = clienttcpSocket[m];
+            num_socket--;
+          } else {
+            str[bytesread] = '\0';
+            printf("%d: %s", clienttcpSocket[i], str);
+            for(int j = 0; j < MAXCLIENT; j++) {
+              if(clienttcpSocket[j] != -1 && i != j) {
+                if (write(clienttcpSocket[j], str, bytesread)!=bytesread)
+                  perror("echo");
+              }
+            }
           }
-          if (bytesread  <= 0) {
-            printf("server: end of file on %d\n",clienttcpSocket[i]);
-            FD_CLR(clienttcpSocket[i], &temps);
-            if (close(clienttcpSocket[i])) perror("close");
-              continue;
-          }
-          str[bytesread] = '\0';
-          printf("%s: %d bytes from %d: %s\n", argv[0], bytesread, clienttcpSocket[i], str);
-          for(int j = 0; j < MAXCLIENT; j++) {
-            if (write(clienttcpSocket[j], str, bytesread)!=bytesread)
-              perror("echo");
-          }
-			/* process the data */
-           // forward the message to all the other sockets
-			// NEED TO IMPLEMENT HERE
         }
 		  }
 	  }
@@ -129,8 +130,8 @@ int main(int argc, char **argv) {
 }//main End
 
 void display() {
-	printf("Student ID : 20000000 \n");
-	printf("Name : Sanghwan  \n");
+	printf("Student ID : 20133230 \n");
+	printf("Name : 성정훈  \n");
 }
 
 void error_handling(char *message) {
